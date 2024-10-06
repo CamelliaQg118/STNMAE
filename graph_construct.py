@@ -13,7 +13,6 @@ def graph_build(adata, adata_X, dataset):
         adj = load_adj(adata, n)
         adj1 = load_adj1(adata)
         adj2 = load_adj2(adata, include_self=True, n=n)
-        # features1 = load_features1(adata_X, k=12, mode="connectivity", metric="cosine")
         features1 = load_features1(adata_X, k=n, mode="connectivity", metric="cosine")
         features2 = load_features2(adata_X, k=n, mode="connectivity", metric="euclidean")
 
@@ -124,7 +123,7 @@ def euclid_dist(t1, t2):
     return np.sqrt(sum)
 
 
-@numba.njit("f4[:,:](f4[:,:])", parallel=False, nogil=False)#######都改为false后性能降低了
+@numba.njit("f4[:,:](f4[:,:])", parallel=False, nogil=False)
 def distance(A):
     n = A.shape[0]
     adj = np.empty((n, n), dtype=np.float32)
@@ -150,19 +149,6 @@ def load_adj2(adata, include_self=False, n=6):
     adj = norm_adj2(adj_mat)
     return adj
 
-
-# def normalize_adj1(A, p):
-#     # A = A + sp.eye(A.shape[0])无需自环处理，因为后续已经实现
-#     degrees = np.power(np.array(A.sum(1)), p).flatten()
-#     degrees[np.isinf(degrees)] = 0.
-#     if sp.issparse(A):
-#         D = sp.diags(degrees)
-#     else:
-#         D = np.diag(degrees)
-#     normalized_D = D
-#     adj_normalized = normalized_D.dot(A).dot(normalized_D)
-#     return adj_normalized
-
 def normalize_sparse_matrix(mx):
     """Row-normalize sparse matrix"""
     rowsum = np.array(mx.sum(1))
@@ -181,11 +167,6 @@ def norm_adj2(adj):
     adj_norm = preprocess_adj(adj_m1)
     adj_m1 = adj_m1 + sp.eye(adj_m1.shape[0])
     adj_m1 = adj_m1.tocoo()
-    # shape = adj_m1.shape
-    # values = adj_m1.data
-    # indices = np.stack([adj_m1.row, adj_m1.col])
-    # adj_label = torch.sparse_coo_tensor(indices, values, shape)
-    # norm_value = adj_m1.shape[0] * adj_m1.shape[0] / float((adj_m1.shape[0] * adj_m1.shape[0] - adj_m1.sum()) * 2)
     return adj_norm
 
 
