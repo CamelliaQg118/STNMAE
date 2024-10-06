@@ -70,41 +70,5 @@ def mclust_R(adata, n_clusters, use_rep='STNMAE', key_added='STNMAE', random_see
     return adata
 
 
-# def metric(stnmae_net, adata, df_meta, tool, n_clusters, random_seed):
-#     if tool == 'mclust':
-#         emb = stnmae_net.train()
-#         adata.obsm['STNMAE'] = emb
-#         adata.obs['ground_truth'] = df_meta['layer_guess']
-#         adata = adata[~pd.isnull(adata.obs['ground_truth'])]
-#         ST_NMAE.mclust_R(adata, n_clusters, use_rep='STNMAE', key_added='STNMAE', random_seed=random_seed)
-#         radius = 50
-#         new_type = utils.refine_label(adata, radius, key='STNMAE')
-#         adata.obs['STNMAE'] = new_type
-#         ARI = metrics.adjusted_rand_score(adata.obs['ground_truth'], adata.obs['STNMAE'])
-#         NMI = metrics.normalized_mutual_info_score(adata.obs['ground_truth'], adata.obs['STNMAE'])
-#     elif tool == 'leiden':
-#         emb = stnmae_net.train()
-#         adata.obsm['STNMAE'] = emb
-#         adata.obs['ground_truth'] = df_meta['layer_guess']
-#         adata = adata[~pd.isnull(adata.obs['ground_truth'])]
-#         ST_NMAE.leiden(adata, n_clusters, use_rep='STNMAE', key_added='STNMAE', random_seed=random_seed)
-#         radius = 50
-#         new_type = utils.refine_label(adata, radius, key='STNMAE')
-#         adata.obs['STNMAE'] = new_type
-#         ARI = metrics.adjusted_rand_score(adata.obs['ground_truth'], adata.obs['STNMAE'])
-#         NMI = metrics.normalized_mutual_info_score(adata.obs['ground_truth'], adata.obs['STNMAE'])
-#
-#     elif tool == 'louvain':
-#         emb = stnmae_net.train()
-#         adata.obsm['STNMAE'] = emb
-#         adata.obs['ground_truth'] = df_meta['layer_guess']
-#         adata = adata[~pd.isnull(adata.obs['ground_truth'])]
-#         ST_NMAE.louvain(adata, n_clusters, use_rep='STNMAE', key_added='STNMAE', random_seed=random_seed)
-#         radius = 50
-#         new_type = utils.refine_label(adata, radius, key='STNMAE')
-#         adata.obs['STNMAE'] = new_type
-#         ARI = metrics.adjusted_rand_score(adata.obs['ground_truth'], adata.obs['STNMAE'])
-#         NMI = metrics.normalized_mutual_info_score(adata.obs['ground_truth'], adata.obs['STNMAE'])
-
 
 
