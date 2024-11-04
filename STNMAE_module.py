@@ -117,11 +117,6 @@ class stnmae_module(nn.Module):
         self.encode = self.Code(self.g_type, self.input_dim, self.latent_dim, self.output_dim, self.dorp_code)
         self.decoder = self.Code(self.decode_type, self.output_dec1, self.latent_dim, self.input_dim, self.dorp_code)
         self.encode_latent = self.Code(self.g_type, self.input_latent, self.latent_dim, self.output_dim, self.dorp_code)
-        self.projector = nn.Sequential(nn.Linear(self.latent_p, self.train_dim),
-                                       nn.PReLU(), nn.Linear(self.train_dim, self.latent_p))
-        self.projector_generate = nn.Sequential(nn.Linear(self.latent_p, self.train_dim),
-                                                nn.PReLU(), nn.Linear(self.train_dim, self.latent_p))
-        self.predictor = nn.Sequential(nn.PReLU(), nn.Linear(self.latent_p, self.latent_p))
         self.encode_generate = self.Code(self.g_type, self.input_dim, self.latent_dim, self.output_dim, self.dorp_code)
 
         self.encode_generate.load_state_dict(self.encode.state_dict())
@@ -219,19 +214,6 @@ class stnmae_module(nn.Module):
         rep[masked_nodes] = 0
         return rep
 
-    def encoding_mask_noise(self, adj, x, mask_rate=0.3):
-        num_nodes = adj.shape[0]
-        perm = torch.randperm(num_nodes, device=x.device)
-        # random masking
-        num_mask_nodes = int(mask_rate * num_nodes)
-        mask_nodes = perm[: num_mask_nodes]
-        keep_nodes = perm[num_mask_nodes:]
-
-        out_x = x.clone()
-        token_nodes = mask_nodes
-        out_x[token_nodes] += self.enc_mask_token
-        use_adj = adj.clone()
-        return use_adj, out_x, (mask_nodes, keep_nodes)
 
     def Code(self, m_type, in_dim, num_hidden, out_dim, dropout) -> nn.Module:
         if m_type == "GCN":
