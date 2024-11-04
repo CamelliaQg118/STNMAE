@@ -119,9 +119,7 @@ class stnmae_train:
                         break
 
                 torch.set_grad_enabled(True)
-                #
-                # self.model.train()
-                # self.optimizer.zero_grad()
+                
                 _, out_q, loss_rec, loss_latent = self.model(self.X, self.adj, self.features1, self.features2, self.adj1, self.adj2)
                 loss_kl = F.kl_div(out_q.log(), torch.tensor(tmp_p).to(self.device)).to(self.device)
                 loss_total = self.rec_w * loss_rec + self.laten_w * loss_latent + self.kl_w * loss_kl
