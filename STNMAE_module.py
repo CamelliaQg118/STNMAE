@@ -9,15 +9,6 @@ cudnn.deterministic = True
 cudnn.benchmark = True
 
 
-def sce_loss(x, y, alpha=3):
-    x = F.normalize(x, p=2, dim=-1)
-    y = F.normalize(y, p=2, dim=-1)
-    loss = (1 - (x * y).sum(dim=-1)).pow_(alpha)
-    loss = loss.mean()
-    return loss
-
-
-
 class GCN(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, dropout):
         super(GCN, self).__init__()
@@ -27,11 +18,16 @@ class GCN(nn.Module):
 
     def forward(self, x, adj):
         x = F.relu(self.gc1(x, adj))
-        # x = nn.PReLU()(self.gc1(x, adj))    #####################################后续试试
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.gc2(x, adj)
         return x
-
+        
+def sce_loss(x, y, alpha=3):
+    x = F.normalize(x, p=2, dim=-1)
+    y = F.normalize(y, p=2, dim=-1)
+    loss = (1 - (x * y).sum(dim=-1)).pow_(alpha)
+    loss = loss.mean()
+    return loss
 
 class Attention(nn.Module):
     def __init__(self, input_dim,  output_dim):
@@ -44,18 +40,14 @@ class Attention(nn.Module):
         )
 
     def forward(self, z):
-        # print("Z的维度", z.size())
         w = self.project(z)
         beta = torch.softmax(w, dim=1)
-        return (beta * z).sum(1), beta# beta注意力权重矩阵，(beta * z).sum(1)全局表示
-
-    """STMGCN和SpatialMGCN前向传播部分代码上是一样的，但是实施的细节不同，因为project不同"""
-
-
-class MGCN(nn.Module):
+        return (beta * z).sum(1), beta
+# multi-view encoder
+class MEncoder(nn.Module):
     def __init__(self, input_dim, latent_dim, output_dim, dropout):
         super(MGCN, self).__init__()
-        self.GCNA1 = GCN(input_dim, latent_dim, output_dim, dropout)  # 初始化GCN类，GCN1特征维度，隐藏层维度
+        self.GCNA1 = GCN(input_dim, latent_dim, output_dim, dropout)  
         self.GCNA2 = GCN(input_dim, latent_dim, output_dim, dropout)
         self.GCNA3 = GCN(input_dim, latent_dim, output_dim, dropout)
         self.GCNA4 = GCN(input_dim, latent_dim, output_dim, dropout)
@@ -72,10 +64,6 @@ class stnmae_module(nn.Module):
             self,
             input_dim,
             nclass,
-            # latent_dim=64,
-            # output_dim=32,
-            # latent_dim=128,
-            # output_dim=32,
             latent_dim=128,
             output_dim=64,
             train_dim=128,
@@ -91,7 +79,7 @@ class stnmae_module(nn.Module):
             mask_rate=0.8,
             remask_rate=0.8,
             device='cuda:0'
-    ):#隐藏层维度
+    ):
         super(stnmae_module, self).__init__()
         self.device = device
         self.input_dim = input_dim
@@ -109,8 +97,7 @@ class stnmae_module(nn.Module):
         self.drop_en = drop_en
         self.alpha = alpha
         self.mask_rate = mask_rate
-        """掩码比例，到时候可以调调，0.8感觉有点高"""
-        self.remask_rate = remask_rate  ###感觉仍然很高
+        self.remask_rate = remask_rate 
         self.mask_dim = output_dim
         self.input_latent = output_dim
         self.en_hidden = latent_dim
@@ -126,9 +113,8 @@ class stnmae_module(nn.Module):
         torch.nn.init.xavier_normal_(self.cluster_layer)
 
         self.encoder = Encodeer_Model(self.input_dim, self.en_hidden,  self.en_hidden2, self.drop_en, self.device)
-        self.mgcn = MGCN(self.input_dim, self.latent_dim,  self.output_dim, self.dropout)
+        self.mgcn = MEncoder(self.input_dim, self.latent_dim,  self.output_dim, self.dropout)
         self.encode = self.Code(self.g_type, self.input_dim, self.latent_dim, self.output_dim, self.dorp_code)
-        # self.decoder = self.Code(self.decode_type, self.output_dec, self.latent_dim, self.input_dim, self.dorp_code)  ###初始版本对应的解码器
         self.decoder = self.Code(self.decode_type, self.output_dec1, self.latent_dim, self.input_dim, self.dorp_code)
         self.encode_latent = self.Code(self.g_type, self.input_latent, self.latent_dim, self.output_dim, self.dorp_code)
         self.projector = nn.Sequential(nn.Linear(self.latent_p, self.train_dim),
@@ -156,14 +142,7 @@ class stnmae_module(nn.Module):
         adj, X, (mask_nodes, keep_nodes) = self.encoding_mask_noise(adj, X, self.mask_rate)
         Zf = self.encoder(X)
         Gf1, Gf2, Gs1, Gs2 = self.mgcn(X, features1, features2, adj1, adj2)
-        """下面的代码是初始版本，勿删！！！！！！！！！"""
-        # H0 = torch.cat((Zf, Gf1), 1)
-        # H1 = torch.cat((Zf, Gf2), 1)
-        # H2 = torch.cat((Zf, Gs1), 1)
-        # H3 = torch.cat((Zf, Gs2), 1)
-        # H = self.encode_latent(Zf, adj)
-        # emb1 = torch.cat([H, (H0 + H1 + H2 + H3) / 4], dim=1).to(self.device)
-        """这一版更符合画的模型架构图"""
+        
         H0 = Gf1
         H1 = Gf2
         H2 = Gs1
@@ -173,67 +152,47 @@ class stnmae_module(nn.Module):
 
         linear = nn.Linear(self.emb, self.output_dim).to(self.device)
         emb = linear(emb1).to(self.device)
-
-        with torch.no_grad():#不进行梯度计算生成目标特征表示
-            X_target = self.encode_generate(X, adj)#通过encoder_ema对 drop_g2 和原始特征 x 进行编码
-            x_target = self.projector_generate(X_target[keep_nodes])#否则对保留节点进行预测（未掩码的那部分保留节点）
+        #target-projector
+        with torch.no_grad():
+            X_target = self.encode_generate(X, adj)
+            x_target = self.projector_generate(X_target[keep_nodes])
 
         X_pred = self.projector(H[keep_nodes])
         x_pred = self.predictor(X_pred)
-        loss_latent = sce_loss(x_pred, x_target, 1)#没有目标target则对未编码部分执行上面相应的操作
+        loss_latent = sce_loss(x_pred, x_target, 1)
 
         # ---- attribute reconstruction ----
         latent_emb = self.encoder_to_decoder(H)
         loss_rec_all = 0
-        if self.remask_method == "random":#随机重掩码
+        if self.remask_method == "random":
             for i in range(self.num_graph):
                 locals()[f'G{i}'] = locals()[f'H{i}'].clone()
-                # locals()[f'G{i}'], (remask_nodes, rekeep_nodes) = self.random_remask(adj, locals()[f'G{i}'], self.remask_rate)#进行重掩码
                 locals()[f'G{i}'], _, _ = self.random_remask(adj, locals()[f'G{i}'], self.remask_rate)
-                # print("H_i维度",  locals()[f'H_{i}'].size())
-                locals()[f'recon{i}'] = self.decoder(locals()[f'G{i}'], adj)#解码器重建输入，即生成Z
-                # x_init = X[mask_nodes]
+                locals()[f'recon{i}'] = self.decoder(locals()[f'G{i}'], adj)
                 x_init = X[mask_nodes]
                 x_rec = locals()[f'recon{i}'][mask_nodes]
                 loss_rec = self.loss_type(x_init, x_rec)
                 loss_rec_all += loss_rec
-            loss_rec = loss_rec_all#重构损失
-        elif self.remask_method == "fixed":#固定损失
+            loss_rec = loss_rec_al
+        elif self.remask_method == "fixed":
             for i in range(self.num_graph):
                 locals()[f'G{i}'] = locals()[f'H{i}'].clone()
                 locals()[f'G{i}'] = self.fixed_remask(locals()[f'G{i}'], mask_nodes)
-                # locals()[f'H_{i}'], _, _ = self.random_remask(adj, locals()[f'H_{i}'], self.remask_rate)  # 进行重掩码
-                # print("H_i维度",  locals()[f'H_{i}'].size())
-                locals()[f'recon{i}'] = self.decoder(locals()[f'G{i}'], adj)# 解码器重建输入，即生成Z
+                locals()[f'recon{i}'] = self.decoder(locals()[f'G{i}'], adj)
                 x_init = X[mask_nodes]
                 x_rec = locals()[f'recon{i}'][mask_nodes]
                 loss_rec = self.loss_type(x_init, x_rec)
                 loss_rec_all += loss_rec
             loss_rec = loss_rec_all
-            # rep = self.fixed_remask(latent_emb, mask_nodes)#对输入解码器进行掩码
-            # x_rec = self.decoder2(rep, adj)#重构损失
-            # x_init = X[mask_nodes]
-            # loss_rec = self.loss_type(x_init, x_rec)#同上
         else:
             raise NotImplementedError
 
         q = 1.0 / ((1.0 + torch.sum((emb.unsqueeze(1) - self.cluster_layer) ** 2, dim=2) / self.alpha))
         q = q.pow((self.alpha + 1.0) / 2.0)
         q = q ** (self.alpha + 1.0) / 2.0
-        q = q / torch.sum(q, dim=1, keepdim=True)  # 便于损失计算
-        # print("q的值", q)
-        return emb, q, loss_rec, loss_latent
+        q = q / torch.sum(q, dim=1, keepdim=True) 
 
-    # def ema_update(self):
-    #     momentum = 0.996
-    #     def update(student, teacher):
-    #         with torch.no_grad():
-    #         # m = momentum_schedule[it]  # momentum parameter
-    #             m = momentum
-    #             for param_q, param_k in zip(student.parameters(), teacher.parameters()):
-    #                 param_k.data.mul_(m).add_((1 - m) * param_q.detach().data)
-    #     update(self.encode, self.encode_generate)
-    #     update(self.projector, self.projector_generate)
+        return emb, q, loss_rec, loss_latent
 
     def setup_loss_fn(self, loss_fn, alpha_l=3):
         if loss_fn == "mse":
