@@ -115,24 +115,6 @@ def calculate_adj_matrix(x, y):
     return adj
 
 
-@numba.njit("f4(f4[:], f4[:])")
-def euclid_dist(t1, t2):
-    sum = 0
-    for i in range(t1.shape[0]):
-        sum += (t1[i]-t2[i])**2
-    return np.sqrt(sum)
-
-
-@numba.njit("f4[:,:](f4[:,:])", parallel=False, nogil=False)
-def distance(A):
-    n = A.shape[0]
-    adj = np.empty((n, n), dtype=np.float32)
-    for i in numba.prange(n):
-        for j in numba.prange(n):
-            adj[i][j] = euclid_dist(A[i], A[j])
-    return adj
-
-
 def load_adj2(adata, include_self=False, n=6):
     assert 'spatial' in adata.obsm, 'AnnData object should provide spatial information'
     cosine_sim = cosine_similarity(adata.obsm['spatial'])
@@ -169,18 +151,6 @@ def norm_adj2(adj):
     adj_m1 = adj_m1.tocoo()
     return adj_norm
 
-
-
-def load_features1(features, k=12, mode="connectivity", metric="cosine"):
-    A = kneighbors_graph(features, k, mode=mode, metric=metric, include_self=True)
-    A = A.toarray()
-    row, col = np.diag_indices_from(A)
-    A[row, col] = 0
-    fadj = sp.coo_matrix(A, dtype=np.float32)
-    fadj = fadj + fadj.T.multiply(fadj.T > fadj) - fadj.multiply(fadj.T > fadj)
-    fadj = normalize_sparse_matrix(fadj + sp.eye(fadj.shape[0]))
-    fadj = sparse_mx_to_torch_sparse_tensor(fadj)
-    return fadj
 
 
 def load_features2(features, k=12, mode="connectivity", metric="euclidean"):
