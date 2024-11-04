@@ -198,17 +198,19 @@ class stnmae_module(nn.Module):
             raise NotImplementedError
         return loss_type
 
-    def random_remask(self, adj, rep, remask_rate=0.5):
+    def encoding_mask_noise(self, adj, x, mask_rate=0.3):
         num_nodes = adj.shape[0]
-        perm = torch.randperm(num_nodes, device=rep.device)
-        num_remask_nodes = int(remask_rate * num_nodes)
-        remask_nodes = perm[: num_remask_nodes]
-        rekeep_nodes = perm[num_remask_nodes:]
-        rep = rep.clone()
-        rep[remask_nodes] = 0
-        rep[remask_nodes] += self.dec_mask_token
-        # return rep, (remask_nodes, rekeep_nodes)
-        return rep, remask_nodes, rekeep_nodes
+        perm = torch.randperm(num_nodes, device=x.device)
+        # random masking
+        num_mask_nodes = int(mask_rate * num_nodes)
+        mask_nodes = perm[: num_mask_nodes]
+        keep_nodes = perm[num_mask_nodes:]
+
+        out_x = x.clone()
+        token_nodes = mask_nodes
+        out_x[token_nodes] += self.enc_mask_token
+        use_adj = adj.clone()
+        return use_adj, out_x, (mask_nodes, keep_nodes)
 
     def fixed_remask(self, rep, masked_nodes):
         rep[masked_nodes] = 0
