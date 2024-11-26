@@ -22,7 +22,7 @@ ST_NMAE.fix_seed(random_seed)
 
 ARI_list = []
 os.environ['R_HOME'] = 'D:/Software/Code/R/R-4.3.3/R-4.3.3'
-os.environ['R_USER'] = 'C:/Users/29461/.conda/envs/SEDR/Lib/site-packages/rpy2'
+os.environ['R_USER'] = 'C:/Users/29461/.conda/envs/STNMAE/Lib/site-packages/rpy2'
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 print(device)
 
