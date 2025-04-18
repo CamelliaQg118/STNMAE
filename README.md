@@ -1,6 +1,6 @@
 # STNAME: Identifying spatial domains from spatial transcriptomics data with neighbor-aware multi-view masked graph autoencoder
 
-![Gao1](https://github.com/user-attachments/assets/e0d5c6fc-d223-47b2-9dd1-02231df87f85)
+
 The complete code will be made available after the article is published.
 ## Overview:
 
