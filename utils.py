@@ -22,20 +22,6 @@ def adata_hvg(adata):
     return adata
 
 
-def adata_hvg_process(adata):
-    sc.pp.normalize_total(adata, target_sum=1e6)
-    sc.pp.scale(adata)
-    return adata
-
-def adata_hvg_slide(adata):
-    sc.pp.filter_genes(adata, min_cells=50)
-    sc.pp.normalize_total(adata, target_sum=1e6)
-    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=3000)
-    adata = adata[:, adata.var['highly_variable'] ==True]
-    sc.pp.scale(adata)
-    return adata
-
-
 def fix_seed(seed):
     import random
     import torch
