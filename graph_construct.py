@@ -16,29 +16,6 @@ def graph_build(adata, adata_X, dataset):
         features1 = load_features1(adata_X, k=n, mode="connectivity", metric="cosine")
         features2 = load_features2(adata_X, k=n, mode="connectivity", metric="euclidean")
 
-    elif dataset == 'MBO':
-        n = 10
-        adj = load_adj(adata, n)
-        adj1 = load_adj1(adata)
-        adj2 = load_adj2(adata, include_self=True, n=n)
-        features1 = load_features1(adata_X, k=14, mode="connectivity", metric="cosine")
-        features2 = load_features2(adata_X, k=14, mode="connectivity", metric="euclidean")
-
-    elif dataset =='MOB_V2':
-        n = 7
-        adj = load_adj(adata, n)
-        adj1 = load_adj1(adata)
-        adj2 = load_adj2(adata, include_self=True, n=n)
-        features1 = load_features1(adata_X, k=12, mode="connectivity", metric="cosine")
-        features2 = load_features2(adata_X, k=12, mode="connectivity", metric="euclidean")
-
-    elif dataset == 'Adult_Mouse_Brain_Section_1':
-        n = 5
-        adj = load_adj(adata, n)
-        adj1 = load_adj1(adata)
-        adj2 = load_adj2(adata, include_self=True, n=n)
-        features1 = load_features1(adata_X, k=n, mode="connectivity", metric="cosine")
-        features2 = load_features2(adata_X, k=n, mode="connectivity", metric="euclidean")
     elif dataset == 'ISH':
         n = 7
         adj = load_adj(adata, n)
@@ -163,3 +140,4 @@ def load_features2(features, k=12, mode="connectivity", metric="euclidean"):
     fadj = normalize_sparse_matrix(fadj + sp.eye(fadj.shape[0]))
     fadj = sparse_mx_to_torch_sparse_tensor(fadj)
     return fadj
+
