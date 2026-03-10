@@ -1,9 +1,9 @@
-# STNAME
+# STNAME(DOI:)
+An official source code for the paper "STNMAE: Identifying spatial domains from spatial transcriptomics data with neighbor-aware multi-view masked graph autoencoder," accepted by Interdisciplinary Sciences: Computational Life Sciences. Any communications or issues are welcome. Please contact qigao118@163.com. If you find this repository useful to your research or work, it is really appreciated to cite our paper.
 
-
-The complete code will be made available after the article is published.
 ## Overview:
-
+![Fig1](https://github.com/user-attachments/assets/c78a1dbf-69e3-4d9c-8071-8edf4d5f7fa4)
+STNMAE, a neighborhood-aware multi-view graph autoencoder architecture for spatial domain identification, learns latent representations of gene expression profiles and spatial information by jointly training a features masking encoder, a multi-view autoencoder, and a target generator-mapper. STNMAE performs downstream analysis, such as spatial domain identification, trajectory inference, DEGs. STNMAE has been applied to seven spatial transcriptomics datasets across platforms like 10X Visium, STARmap, Stereo-seq, Slide-seqV2.
 
 ## Requirements:
  
