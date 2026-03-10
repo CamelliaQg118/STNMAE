@@ -19,7 +19,7 @@ def target_distribution(batch):
     return (weight.t() / torch.sum(weight, 1)).t()
 
 
-def consistency_loss(emb1, emb2):#余弦损失
+def consistency_loss(emb1, emb2):
     emb1 = emb1 - torch.mean(emb1, dim=0, keepdim=True)
     emb2 = emb2 - torch.mean(emb2, dim=0, keepdim=True)
     emb1 = torch.nn.functional.normalize(emb1, p=2, dim=1)
