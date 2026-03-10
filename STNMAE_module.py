@@ -149,7 +149,6 @@ class stnmae_module(nn.Module):
         adj, X, (mask_nodes, keep_nodes) = self.encoding_mask_noise(adj, X, self.mask_rate)
         Zf = self.encoder(X)
         Gf1, Gf2, Gs1, Gs2 = self.mgcn(X, features1, features2, adj1, adj2)
-
         H0 = Gf1
         H1 = Gf2
         H2 = Gs1
@@ -292,6 +291,7 @@ class Encodeer_Model(nn.Module):
         x = self.full_block(x)
         feat = self.KAN(x)
         return feat
+
 
 
 
