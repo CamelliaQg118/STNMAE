@@ -19,7 +19,7 @@ def target_distribution(batch):
     return (weight.t() / torch.sum(weight, 1)).t()
 
 
-def consistency_loss(emb1, emb2):#余弦损失
+def consistency_loss(emb1, emb2):
     emb1 = emb1 - torch.mean(emb1, dim=0, keepdim=True)
     emb2 = emb2 - torch.mean(emb2, dim=0, keepdim=True)
     emb1 = torch.nn.functional.normalize(emb1, p=2, dim=1)
@@ -120,23 +120,15 @@ class stnmae_train:
                         break
 
                 torch.set_grad_enabled(True)
-                #
-                # self.model.train()
-                # self.optimizer.zero_grad()
                 _, out_q, loss_rec, loss_latent = self.model(self.X, self.adj, self.features1, self.features2, self.adj1, self.adj2)
                 loss_kl = F.kl_div(out_q.log(), torch.tensor(tmp_p).to(self.device)).to(self.device)
                 loss_total = self.rec_w * loss_rec + self.laten_w * loss_latent + self.kl_w * loss_kl
                 loss_total.backward()
                 self.optimizer.step()
-                list_rec.append(loss_rec.detach().cpu().numpy())
-                list_kl.append(loss_kl.detach().cpu().numpy())
-                list_latent.append(loss_latent.detach().cpu().numpy())
-                list_total.append(loss_total.detach().cpu().numpy())
 
                 kmeans = KMeans(n_clusters=self.n_clusters).fit(emb)
                 idx = kmeans.labels_
                 self.adata.obsm['STNMAE'] = emb
-                # adata1 = ST_NMAE.mclust_R(self.adata, self.n_clusters, use_rep='STNMAE', key_added='STNMAE', random_seed=self.random_seed)
                 labels = self.adata.obs['ground']
                 labels = pd.to_numeric(labels, errors='coerce')
                 labels = pd.Series(labels).fillna(0).to_numpy()
@@ -147,22 +139,7 @@ class stnmae_train:
                     epoch_max = epoch
                     idx_max = idx
                     emb_max = emb
-                # print(' epoch: ', epoch, ' loss_rec = {:.5f}'.format(loss_rec), ' loss_latent = {:.5f}'.format(loss_latent),)
-            import matplotlib.pyplot as plt
-            # savepath1 = '../Result/STNMAE/DLPFC/loss/' + str(slice) + '/'
-            fig, ax = plt.subplots()
-            ax.plot(list_rec, label='rec')
-            ax.plot(list_latent, label='latent')
-            ax.plot(list_kl, label='kl')
-            ax.plot(list_total, label='total')
-            ax.legend()
-            plt.show()
-            # plt.savefig(savepath1 + 'loss.jpg', bbox_inches='tight', dpi=300)
-
-            print("epoch_max", epoch_max)
-            print("ARI=======", ari_max)
             nmi_res = metrics.normalized_mutual_info_score(labels, idx_max)
-            print("NMI=======", nmi_res)
             self.adata.obs['STNMAE'] = idx_max.astype(str)
             self.adata.obsm['emb'] = emb_max
             return self.adata.obsm['emb'], self.adata.obs['STNMAE']
@@ -183,27 +160,12 @@ class stnmae_train:
                         break
 
                 torch.set_grad_enabled(True)
-                #
-                # self.model.train()
-                # self.optimizer.zero_grad()
                 _, out_q, loss_rec, loss_latent = self.model(self.X, self.adj, self.features1, self.features2,
                                                              self.adj1, self.adj2)
                 loss_kl = F.kl_div(out_q.log(), torch.tensor(tmp_p).to(self.device)).to(self.device)
                 loss_total = self.rec_w * loss_rec + self.laten_w * loss_latent + self.kl_w * loss_kl
                 loss_total.backward()
                 self.optimizer.step()
-                list_rec.append(loss_rec.detach().cpu().numpy())
-                list_kl.append(loss_kl.detach().cpu().numpy())
-                list_latent.append(loss_latent.detach().cpu().numpy())
-                # print(' epoch: ', epoch, ' loss_rec = {:.5f}'.format(loss_rec), ' loss_latent = {:.5f}'.format(loss_latent),
-                #       'loss_kl = {:.5f}'.format(loss_kl), ' loss_total = {:.5f}'.format(loss_total))
-            # import matplotlib.pyplot as plt
-            # fig, ax = plt.subplots()
-            # ax.plot(list_rec, label='rec')
-            # ax.plot(list_latent, label='latent')
-            # ax.plot(list_kl, label='kl')
-            # ax.legend()
-            # plt.show()
             return emb
 
     def model_eval(self):
