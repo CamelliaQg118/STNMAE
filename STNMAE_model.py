@@ -136,7 +136,6 @@ class stnmae_train:
                 kmeans = KMeans(n_clusters=self.n_clusters).fit(emb)
                 idx = kmeans.labels_
                 self.adata.obsm['STNMAE'] = emb
-                # adata1 = ST_NMAE.mclust_R(self.adata, self.n_clusters, use_rep='STNMAE', key_added='STNMAE', random_seed=self.random_seed)
                 labels = self.adata.obs['ground']
                 labels = pd.to_numeric(labels, errors='coerce')
                 labels = pd.Series(labels).fillna(0).to_numpy()
@@ -165,9 +164,6 @@ class stnmae_train:
                         break
 
                 torch.set_grad_enabled(True)
-                #
-                # self.model.train()
-                # self.optimizer.zero_grad()
                 _, out_q, loss_rec, loss_latent = self.model(self.X, self.adj, self.features1, self.features2,
                                                              self.adj1, self.adj2)
                 loss_kl = F.kl_div(out_q.log(), torch.tensor(tmp_p).to(self.device)).to(self.device)
