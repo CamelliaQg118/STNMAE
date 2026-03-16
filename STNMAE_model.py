@@ -147,24 +147,6 @@ class stnmae_train:
                     epoch_max = epoch
                     idx_max = idx
                     emb_max = emb
-                # print(' epoch: ', epoch, ' loss_rec = {:.5f}'.format(loss_rec), ' loss_latent = {:.5f}'.format(loss_latent),)
-            import matplotlib.pyplot as plt
-            # savepath1 = '../Result/STNMAE/DLPFC/loss/' + str(slice) + '/'
-            fig, ax = plt.subplots()
-            ax.plot(list_rec, label='rec')
-            ax.plot(list_latent, label='latent')
-            ax.plot(list_kl, label='kl')
-            ax.plot(list_total, label='total')
-            ax.legend()
-            plt.show()
-            # plt.savefig(savepath1 + 'loss.jpg', bbox_inches='tight', dpi=300)
-
-            print("epoch_max", epoch_max)
-            print("ARI=======", ari_max)
-            nmi_res = metrics.normalized_mutual_info_score(labels, idx_max)
-            print("NMI=======", nmi_res)
-            self.adata.obs['STNMAE'] = idx_max.astype(str)
-            self.adata.obsm['emb'] = emb_max
             return self.adata.obsm['emb'], self.adata.obs['STNMAE']
         else:
             for epoch in tqdm(range(self.epochs)):
@@ -195,15 +177,6 @@ class stnmae_train:
                 list_rec.append(loss_rec.detach().cpu().numpy())
                 list_kl.append(loss_kl.detach().cpu().numpy())
                 list_latent.append(loss_latent.detach().cpu().numpy())
-                # print(' epoch: ', epoch, ' loss_rec = {:.5f}'.format(loss_rec), ' loss_latent = {:.5f}'.format(loss_latent),
-                #       'loss_kl = {:.5f}'.format(loss_kl), ' loss_total = {:.5f}'.format(loss_total))
-            # import matplotlib.pyplot as plt
-            # fig, ax = plt.subplots()
-            # ax.plot(list_rec, label='rec')
-            # ax.plot(list_latent, label='latent')
-            # ax.plot(list_kl, label='kl')
-            # ax.legend()
-            # plt.show()
             return emb
 
     def model_eval(self):
