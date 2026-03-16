@@ -176,7 +176,6 @@ class stnmae_module(nn.Module):
             for i in range(self.num_graph):
                 locals()[f'G{i}'] = locals()[f'H{i}'].clone()
                 locals()[f'G{i}'], _, _= self.random_remask(adj, locals()[f'G{i}'], self.remask_rate)
-                # print("H_i",  locals()[f'H_{i}'].size())
                 locals()[f'recon{i}'] = self.decoder(locals()[f'G{i}'], adj)
                 x_init = X[mask_nodes]
                 x_rec = locals()[f'recon{i}'][mask_nodes]
@@ -187,18 +186,12 @@ class stnmae_module(nn.Module):
             for i in range(self.num_graph):
                 locals()[f'G{i}'] = locals()[f'H{i}'].clone()
                 locals()[f'G{i}'] = self.fixed_remask(locals()[f'G{i}'], mask_nodes)
-                # locals()[f'H_{i}'], _, _ = self.random_remask(adj, locals()[f'H_{i}'], self.remask_rate) 
-                # print("H_i",  locals()[f'H_{i}'].size())
                 locals()[f'recon{i}'] = self.decoder(locals()[f'G{i}'], adj)
                 x_init = X[mask_nodes]
                 x_rec = locals()[f'recon{i}'][mask_nodes]
                 loss_rec = self.loss_type(x_init, x_rec)
                 loss_rec_all += loss_rec
             loss_rec = loss_rec_all
-            # rep = self.fixed_remask(latent_emb, mask_nodes)#
-            # x_rec = self.decoder2(rep, adj)#
-            # x_init = X[mask_nodes]
-            # loss_rec = self.loss_type(x_init, x_rec)#
         else:
             raise NotImplementedError
 
