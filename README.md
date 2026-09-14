@@ -1,4 +1,4 @@
-# STNAME(DOI:)
+# STNAME(DOI:10.1007/s12539-026-00832-9)
 An official source code for the paper "STNMAE: Identifying spatial domains from spatial transcriptomics data with neighbor-aware multi-view masked graph autoencoder," accepted by Interdisciplinary Sciences: Computational Life Sciences. Any communications or issues are welcome. Please contact qigao118@163.com. If you find this repository useful to your research or work, it is really appreciated to cite our paper.
 
 ## Overview:
